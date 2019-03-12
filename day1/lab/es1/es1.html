@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<body>
+<canvas id="c" width="800" height="800"></canvas>
+<script>
+
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+var mousex = 0;
+var mousey = 0;
+var mousein = false;
+
+
+function createShapes(n, d) {
+    var shapes = [];
+    for(var i=0; i<n; i++) {
+        for(var j=0;j<n;j++) {
+            shapes.push({
+                x : d * (i - (n-1)/2),
+                y : d * (j - (n-1)/2),
+                d : d * 0.4,
+                f : 0,
+                targetf : 0,
+            });
+        }        
+    }
+    return shapes;
+}
+
+var shapes = createShapes(30,30);
+
+
+function paint() {
+    const width = canvas.width;
+    const height = canvas.width;
+    ctx.clearRect(0,0,width,height);
+
+    ctx.lineWidth = 2;
+    shapes.forEach(shape => {
+    
+        if(mousein) {        
+            const dist2 = Math.pow(mousex-width/2-shape.x,2) + Math.pow(mousey-height/2-shape.y,2);
+            shape.targetf = Math.exp(-dist2*0.00001);
+        } else {
+            shape.targetf = 0;
+        }
+        shape.f = 0.9 * shape.f + shape.targetf * 0.1;
+    
+        ctx.save();
+        ctx.translate(width/2 + shape.x, height/2 + shape.y);
+        
+        const sc = 1.0 - shape.f;
+        ctx.scale(sc,sc);
+        ctx.rotate(shape.f*2);
+        
+        ctx.beginPath();
+        ctx.rect(-shape.d,-shape.d,2*shape.d,2*shape.d);
+        ctx.stroke();
+        
+        ctx.restore();
+    });
+    
+    ctx.save();
+    ctx.translate(mousex,mousey);
+    ctx.beginPath();
+    ctx.arc(0,0,10,0,2*Math.PI);
+    ctx.stroke();
+    ctx.restore();    
+}
+
+canvas.addEventListener("mousemove", function(e) {
+    mousex = e.offsetX;
+    mousey = e.offsetY;    
+    mousein = true;
+});
+canvas.addEventListener("mouseout", function(e) { 
+    mousein = false;
+});
+
+
+function render() {
+    paint();
+    requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+
+</script>
+</body>
+</html>
